@@ -1,0 +1,229 @@
+""<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мега-Диск</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1e1e1e;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #ffcc00;
+            margin: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .file-input {
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #ffcc00;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #121212;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #e6b800;
+        }
+        .file-list, .folder-list {
+            width: 100%;
+            text-align: left;
+            margin-top: 20px;
+        }
+        .file, .folder {
+            padding: 10px;
+            background-color: #1e1e1e;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .file:hover, .folder:hover {
+            background-color: #2c2c2c;
+        }
+        .preview {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Мега-Диск</h1>
+</header>
+
+<div class="container">
+    <h2>Загрузите ваш файл</h2>
+    <input type="file" id="fileInput" class="file-input">
+    <button class="button" onclick="uploadFile()">Загрузить</button>
+
+    <h2>Создать папку</h2>
+    <input type="text" id="folderName" placeholder="Название папки">
+    <button class="button" onclick="createFolder()">Создать</button>
+
+    <h2>Ваши файлы и папки</h2>
+    <div class="folder-list" id="folderList"></div>
+    <div class="file-list" id="fileList"></div>
+
+    <div class="preview" id="preview">
+        <h3>Предпросмотр</h3>
+        <img id="previewImg" src="" alt="Предпросмотр">
+        <p id="previewText"></p>
+    </div>
+</div>
+
+<script>
+    let files = [];
+    let folders = [];
+
+    async function uploadFile() {
+        const input = document.getElementById('fileInput');
+        if (input.files.length === 0) return alert("Выберите файл!");
+
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/files/folders/root", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("Файл загружен!");
+                loadFiles(); // Перезагрузить список файлов
+            } else {
+                alert("Ошибка загрузки!");
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+        }
+}
+
+
+    async function createFolder() {
+        const input = document.getElementById('folderName');
+        const folderName = input.value.trim();
+        if (!folderName) return alert("Введите имя папки!");
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/files/folders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: folderName })
+            });
+
+            if (response.ok) {
+                alert("Папка создана!");
+                loadFiles(); // Перезагрузить список
+            } else {
+                alert("Ошибка создания папки!");
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+        }
+    }
+
+
+    async function loadFiles() {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/files/folders");
+            const data = await response.json();
+            
+            const fileList = document.getElementById('fileList');
+            const folderList = document.getElementById('folderList');
+
+            fileList.innerHTML = '';
+            folderList.innerHTML = '';
+
+            // Отображаем папки 📁
+            data.folders.forEach(folder => {
+                const item = document.createElement('div');
+                item.className = 'folder';
+                item.textContent = `📁 ${folder}`;
+                folderList.appendChild(item);
+            });
+
+            // Отображаем файлы 📄
+            data.files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file';
+                item.textContent = `📄 ${file.name}`;
+                item.onclick = () => previewFile(file.url); // Предпросмотр при клике
+                fileList.appendChild(item);
+            });
+        } catch (error) {
+            console.error("Ошибка загрузки файлов:", error);
+        }
+}
+
+
+// Вызываем при загрузке страницы
+loadFiles();
+
+
+    function updateFolderList() {
+        const list = document.getElementById('folderList');
+        list.innerHTML = '';
+        folders.forEach((folder, index) => {
+            const item = document.createElement('div');
+            item.className = 'folder';
+            item.textContent = folder;
+            list.appendChild(item);
+        });
+    }
+
+    function previewFile(fileUrl) {
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('previewImg');
+        const previewText = document.getElementById('previewText');
+
+        if (fileUrl.endsWith('.png') || fileUrl.endsWith('.jpg') || fileUrl.endsWith('.jpeg')) {
+            previewImg.src = fileUrl;
+            previewImg.style.display = 'block';
+            previewText.style.display = 'none';
+        } else {
+            previewText.textContent = `Файл: ${fileUrl}`;
+            previewImg.style.display = 'none';
+            previewText.style.display = 'block';
+        }
+        
+        preview.style.display = 'block';
+}
+
+</script>
+
+</body>
+</html>""

@@ -1,0 +1,209 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Мега-Диск API",
+      "description": "API для управления файлами и папками в сервисе Мега-Диск.",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/auth/token": {
+        "post": {
+          "summary": "Вход в систему",
+          "description": "Получение токена доступа",
+          "operationId": "loginAccessToken",
+          "responses": {
+            "200": {
+              "description": "Успешный вход",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "access_token": "jwt_token",
+                    "token_type": "bearer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/users/register": {
+        "post": {
+          "summary": "Регистрация пользователя",
+          "operationId": "registerUser",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": { "type": "string" },
+                    "password": { "type": "string" }
+                  },
+                  "required": ["username", "password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Пользователь зарегистрирован"
+            }
+          }
+        }
+      },
+      "/users/login": {
+        "post": {
+          "summary": "Логин пользователя",
+          "operationId": "loginUser",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": { "type": "string" },
+                    "password": { "type": "string" }
+                  },
+                  "required": ["username", "password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Успешный вход"
+            }
+          }
+        }
+      },
+      "/files/folders": {
+        "post": {
+          "summary": "Создать папку",
+          "operationId": "createFolder",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" }
+                  },
+                  "required": ["name"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Папка создана"
+            }
+          }
+        },
+        "get": {
+          "summary": "Получить список папок",
+          "operationId": "listFolders",
+          "responses": {
+            "200": {
+              "description": "Список папок",
+              "content": {
+                "application/json": {
+                  "example": ["Documents", "Images"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "/files/folders/{folder_name}": {
+        "delete": {
+          "summary": "Удалить папку",
+          "operationId": "deleteFolder",
+          "parameters": [
+            {
+              "name": "folder_name",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": { "description": "Папка удалена" }
+          }
+        }
+      },
+      "/files/{folder_name}": {
+        "post": {
+          "summary": "Загрузить файл",
+          "operationId": "uploadFile",
+          "parameters": [
+            {
+              "name": "folder_name",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  },
+                  "required": ["file"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Файл загружен"
+            }
+          }
+        }
+      },
+      "/files/files/{file_id}": {
+        "get": {
+          "summary": "Получить файл",
+          "operationId": "getFile",
+          "parameters": [
+            {
+              "name": "file_id",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Файл найден"
+            }
+          }
+        },
+        "delete": {
+          "summary": "Удалить файл",
+          "operationId": "deleteFile",
+          "parameters": [
+            {
+              "name": "file_id",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": { "description": "Файл удалён" }
+          }
+        }
+      }
+    }
+  }
+  
